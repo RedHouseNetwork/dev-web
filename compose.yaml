@@ -1,5 +1,6 @@
 services:
   caddy:
+    container_name: caddy
     image: caddy:2-alpine
     ports:
       - "80:80"
@@ -15,6 +16,7 @@ services:
     restart: unless-stopped
 
   php83:
+    container_name: php83
     build:
       context: .
       dockerfile: Dockerfile.php
@@ -31,6 +33,7 @@ services:
     restart: unless-stopped
 
   php84:
+    container_name: php84
     build:
       context: .
       dockerfile: Dockerfile.php
@@ -47,6 +50,7 @@ services:
     restart: unless-stopped
 
   mysql:
+    container_name: mysql
     image: mysql:8.0
     restart: unless-stopped
     environment:
@@ -62,6 +66,7 @@ services:
       - web:/web
 
   mysql84:
+    container_name: mysql84
     image: mysql:8.4
     profiles: [mysql84]
     restart: unless-stopped
@@ -75,6 +80,7 @@ services:
       - web:/web
 
   mariadb:
+    container_name: mariadb
     image: mariadb:11.1
     profiles: [mariadb]
     restart: unless-stopped
@@ -89,6 +95,7 @@ services:
 
   # N.B. mkdir data/mssql && sudo chown 10001:0 data/mssql
   mssql:
+    container_name: mssql
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles: [mssql]
     restart: unless-stopped
@@ -102,6 +109,7 @@ services:
       - ./data/mssql:/var/opt/mssql
 
   postgres:
+    container_name: postgres
     image: postgres
     profiles: [postgres]
     restart: unless-stopped

@@ -1,2 +1,9 @@
 #!/bin/bash
-docker exec -it -w "$PWD" dev-web-php84-1 bash
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+source "$SCRIPT_DIR/.env"
+WORKDIR="${PWD/#$WEB_ROOT//srv/web}"
+if [[ "$WORKDIR" == /srv/web* ]]; then
+    docker exec -it -w "$WORKDIR" php84 bash
+else
+    docker exec -it php84 bash
+fi
