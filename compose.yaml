@@ -1,0 +1,44 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
+      - web:/srv/web:ro
+    depends_on:
+      - php83
+      - php84
+    restart: unless-stopped
+
+  php83:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+      args:
+        PHP_VERSION: "8.3"
+    user: "1000:1000"
+    volumes:
+      - web:/srv/web
+    restart: unless-stopped
+
+  php84:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+      args:
+        PHP_VERSION: "8.4"
+    user: "1000:1000"
+    volumes:
+      - web:/srv/web
+    restart: unless-stopped
+
+volumes:
+  web:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/wobble/web
