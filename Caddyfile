@@ -4,9 +4,6 @@
 
 (php_common) {
 	encode gzip
-	log {
-		output stderr
-	}
 
 	@notStatic {
 		not path *.ico *.css *.js *.gif *.jpg *.jpeg *.png *.svg *.woff *.woff2
@@ -31,6 +28,9 @@
 }
 
 :443 {
+	log {
+		output stderr
+	}
 	tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
 
 	@project83 header_regexp project83 Host ^(?:.*\.)?([^.]+)\.php83\.symf4(?::\d+)?$
