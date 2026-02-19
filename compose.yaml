@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile.php
       args:
         PHP_VERSION: "8.3"
-    user: "1000:1000"
+    user: "${UID}:${UID}"
     volumes:
       - web:/srv/web
     restart: unless-stopped
@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile.php
       args:
         PHP_VERSION: "8.4"
-    user: "1000:1000"
+    user: "${UID}:${UID}"
     volumes:
       - web:/srv/web
     restart: unless-stopped
@@ -107,4 +107,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/wobble/web
+      device: ${WEB_ROOT}
