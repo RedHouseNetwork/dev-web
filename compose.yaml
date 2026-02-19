@@ -20,6 +20,7 @@ services:
       dockerfile: Dockerfile.php
       args:
         PHP_VERSION: "8.3"
+        WEB_ROOT: ${WEB_ROOT}
     user: "${UID}:${UID}"
     volumes:
       - web:/srv/web
@@ -31,6 +32,7 @@ services:
       dockerfile: Dockerfile.php
       args:
         PHP_VERSION: "8.4"
+        WEB_ROOT: ${WEB_ROOT}
     user: "${UID}:${UID}"
     volumes:
       - web:/srv/web

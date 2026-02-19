@@ -29,4 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+ARG WEB_ROOT=/home/wobble/web
+RUN mkdir -p "$(dirname "$WEB_ROOT")" && ln -s /srv/web "$WEB_ROOT"
+
 WORKDIR /srv/web
