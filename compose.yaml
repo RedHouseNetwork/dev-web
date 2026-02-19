@@ -21,9 +21,13 @@ services:
       args:
         PHP_VERSION: "8.3"
         WEB_ROOT: ${WEB_ROOT}
+        HOST_UID: ${UID}
+    hostname: PHP83
     user: "${UID}:${UID}"
     volumes:
       - web:/srv/web
+      - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
+      - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
     restart: unless-stopped
 
   php84:
@@ -33,9 +37,13 @@ services:
       args:
         PHP_VERSION: "8.4"
         WEB_ROOT: ${WEB_ROOT}
+        HOST_UID: ${UID}
+    hostname: PHP84
     user: "${UID}:${UID}"
     volumes:
       - web:/srv/web
+      - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
+      - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
     restart: unless-stopped
 
   mysql:
@@ -103,6 +111,7 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+      - web:/web
 
 volumes:
   web:

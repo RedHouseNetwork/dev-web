@@ -1,0 +1,2 @@
+#!/bin/bash
+docker exec -it -w "$PWD" dev-web-php83-1 bash 

@@ -1,0 +1,9 @@
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+source "$SCRIPT_DIR/.env"
+WORKDIR="${PWD/#$WEB_ROOT//web}"
+if [[ "$WORKDIR" == /web* ]]; then
+    docker exec -it -w "$WORKDIR" mysql84 /bin/bash
+else
+    docker exec -it mysql84 /bin/bash
+fi
