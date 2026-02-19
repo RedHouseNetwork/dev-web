@@ -33,6 +33,8 @@
 	}
 	tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
 
+	import /etc/caddy/overrides/*.caddy
+
 	@project83 header_regexp project83 Host ^(?:.*\.)?([^.]+)\.php83\.symf4(?::\d+)?$
 	handle @project83 {
 		root * /srv/web/{re.project83.1}.symf/public

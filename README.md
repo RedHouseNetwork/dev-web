@@ -73,6 +73,30 @@ requests based on the Host header:
 
 Each project is expected at `~/web/<name>.symf/public/`.
 
+## Per-site header overrides
+
+Some sites need custom request headers for local development (e.g. faking Google IAP
+headers). The `overrides/` directory holds per-site `.caddy` files that are imported
+into the Caddyfile before the wildcard routing rules.
+
+1. Create the directory if it doesn't exist: `mkdir -p overrides`
+2. Create a `.caddy` file for your site (e.g. `overrides/myproject.caddy`):
+
+   ```caddy
+   @myproject host myproject.php84.symf4
+   handle @myproject {
+       request_header X-Goog-Iap-Jwt-Assertion "foo"
+       request_header X-Goog-Authenticated-User-Email "user@example.com"
+       root * /srv/web/myproject.symf/public
+       import php_common php84 /srv/web/myproject.symf/public
+   }
+   ```
+
+3. Restart Caddy: `docker compose restart caddy`
+
+The entire `overrides/` directory is gitignored so each developer can maintain their
+own set.
+
 ## File layout
 
 ```
@@ -80,6 +104,7 @@ compose.yaml        # Service definitions
 Caddyfile           # Reverse proxy routing
 Dockerfile.php      # PHP-FPM image build
 config/my.cnf       # MySQL 8.0 config
+overrides/          # Per-site Caddy header overrides (not in git)
 scripts/            # Helper scripts (cert generation)
 .env                # Database passwords (not in git)
 .env.example        # Password template
