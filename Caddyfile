@@ -33,19 +33,19 @@
 :443 {
 	tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
 
-	@project83 host_regexp project83 ^(?:.*\.)?([^.]+)\.php83\.symf4$
+	@project83 header_regexp project83 Host ^(?:.*\.)?([^.]+)\.php83\.symf4(?::\d+)?$
 	handle @project83 {
 		root * /srv/web/{re.project83.1}.symf/public
 		import php_common php83 /srv/web/{re.project83.1}.symf/public
 	}
 
-	@project84 host_regexp project84 ^(?:.*\.)?([^.]+)\.php84\.symf4$
+	@project84 header_regexp project84 Host ^(?:.*\.)?([^.]+)\.php84\.symf4(?::\d+)?$
 	handle @project84 {
 		root * /srv/web/{re.project84.1}.symf/public
 		import php_common php84 /srv/web/{re.project84.1}.symf/public
 	}
 
-	@projectHome host_regexp projectHome ^(?:.*\.)?([^.]+)\.home\.symf4$
+	@projectHome header_regexp projectHome Host ^(?:.*\.)?([^.]+)\.home\.symf4(?::\d+)?$
 	handle @projectHome {
 		root * /srv/web/home-network/{re.projectHome.1}.symf/public
 		import php_common php84 /srv/web/home-network/{re.projectHome.1}.symf/public
