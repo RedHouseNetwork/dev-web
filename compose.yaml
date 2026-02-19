@@ -24,8 +24,20 @@ services:
         PHP_VERSION: "8.3"
         WEB_ROOT: ${WEB_ROOT}
         HOST_UID: ${UID}
+        SQLCIPHER_VERSION: ${PHP83_SQLCIPHER_VERSION:-}
+        CHROME_VERSION: ${PHP83_CHROME_VERSION:-128.0.6613.137}
+        INSTALL_XDEBUG: ${PHP83_XDEBUG:-}
     hostname: PHP83
     user: "${UID}:${UID}"
+    shm_size: '2g'
+    tmpfs:
+      - /tmp
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      PANTHER_NO_SANDBOX: 1
     volumes:
       - web:/srv/web
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
@@ -41,8 +53,20 @@ services:
         PHP_VERSION: "8.4"
         WEB_ROOT: ${WEB_ROOT}
         HOST_UID: ${UID}
+        SQLCIPHER_VERSION: ${PHP84_SQLCIPHER_VERSION:-}
+        CHROME_VERSION: ${PHP84_CHROME_VERSION:-128.0.6613.137}
+        INSTALL_XDEBUG: ${PHP84_XDEBUG:-}
     hostname: PHP84
     user: "${UID}:${UID}"
+    shm_size: '2g'
+    tmpfs:
+      - /tmp
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      PANTHER_NO_SANDBOX: 1
     volumes:
       - web:/srv/web
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro

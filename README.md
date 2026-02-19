@@ -73,6 +73,65 @@ requests based on the Host header:
 
 Each project is expected at `~/web/<name>.symf/public/`.
 
+Pointing these hostnames at your machine is your responsibility — configure your
+router, `/etc/hosts`, dnsmasq, or similar to resolve `*.symf4` to the host running
+this stack.
+
+## SQLCipher (optional)
+
+The PHP containers can optionally be built with [SQLCipher](https://www.zetetic.net/sqlcipher/),
+an encrypted drop-in replacement for SQLite. This recompiles SQLCipher from source and
+rebuilds PHP's `sqlite3` and `pdo_sqlite` extensions against it.
+
+To enable, add the version to your `.env` for the containers that need it:
+
+```
+PHP84_SQLCIPHER_VERSION=4.10.0
+```
+
+Then rebuild: `docker compose build php84`. Containers without the variable set are
+unaffected.
+
+Verify it works:
+
+```
+docker compose run --rm php84 php -r \
+  'echo (new PDO("sqlite::memory:"))->query("PRAGMA cipher_version")->fetchColumn();'
+```
+
+## Xdebug (optional)
+
+Xdebug is not installed by default. To enable it, set the build arg for the
+containers that need it in your `.env`:
+
+```
+PHP83_XDEBUG=1
+PHP84_XDEBUG=1
+```
+
+Then rebuild: `docker compose build php83 php84`.
+
+## Chrome / Panther (E2E testing)
+
+The PHP containers include Chrome and ChromeDriver by default for running
+Symfony Panther (or other WebDriver-based) E2E tests. The containers are
+configured with `shm_size: 2g` and `PANTHER_NO_SANDBOX=1` to avoid Chrome
+crashes inside Docker.
+
+To change the Chrome version, set it in your `.env`:
+
+```
+PHP84_CHROME_VERSION=128.0.6613.137
+```
+
+To disable Chrome entirely, set the version to empty:
+
+```
+PHP84_CHROME_VERSION=
+```
+
+Then rebuild the relevant container.
+
 ## Per-site header overrides
 
 Some sites need custom request headers for local development (e.g. faking Google IAP
