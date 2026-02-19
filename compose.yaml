@@ -35,6 +35,72 @@ services:
       - web:/srv/web
     restart: unless-stopped
 
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./config/my.cnf:/etc/my.cnf:ro
+      - ./data/dumps:/dumps
+      - web:/web
+
+  mysql84:
+    image: mysql:8.4
+    profiles: [mysql84]
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3384:3306"
+    volumes:
+      - ./data/mysql84:/var/lib/mysql
+      - ./data/dumps:/dumps
+      - web:/web
+
+  mariadb:
+    image: mariadb:11.1
+    profiles: [mariadb]
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3406:3306"
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+      - ./data/dumps:/dumps
+      - web:/web
+
+  # N.B. mkdir data/mssql && sudo chown 10001:0 data/mssql
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles: [mssql]
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_PASSWORD}
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./data/mssql:/var/opt/mssql
+
+  postgres:
+    image: postgres
+    profiles: [postgres]
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
 volumes:
   web:
     driver: local
