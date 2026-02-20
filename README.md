@@ -156,9 +156,22 @@ into the Caddyfile before the wildcard routing rules.
 The entire `overrides/` directory is gitignored so each developer can maintain their
 own set.
 
+## Helper scripts
+
+The `bin/` directory contains shell shortcuts for opening a shell in each container
+(`php83-sh`, `php84-sh`, `mysql-sh`, etc.). Add it to your `PATH` for easy access:
+
+```
+export PATH="$PATH:/path/to/dev/bin"
+```
+
+Add the line to your `~/.bashrc` or `~/.zshrc` to make it permanent. Then you can
+run e.g. `php84-sh` from anywhere to get a shell in the PHP 8.4 container.
+
 ## File layout
 
 ```
+bin/                # Shell shortcuts for each container
 compose.yaml        # Service definitions
 Caddyfile           # Reverse proxy routing
 Dockerfile.php      # PHP-FPM image build
