@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libfreetype6-dev \
         libxml2-dev \
         libonig-dev \
+        libgmp-dev \
         unzip \
         git \
         curl \
@@ -24,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gd \
         xml \
         mbstring \
+        gmp \
     && pecl install apcu \
     && docker-php-ext-enable apcu \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
@@ -115,6 +117,12 @@ RUN if ! getent group ${HOST_UID} >/dev/null; then \
         useradd -u ${HOST_UID} -g ${HOST_UID} -m -s /bin/bash dev; \
     fi
 
+# Create writable .claude directory for Claude Code credential passthrough.
+# The actual credentials are mounted at runtime — nothing secret is baked in.
+RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
+    && mkdir -p "$HOME_DIR/.claude" \
+    && chown ${HOST_UID}:${HOST_UID} "$HOME_DIR/.claude"
+
 # Activate gbt prompt for interactive shells
 ENV GBT_CAR__HOSTNAME__FORMAT='{{ .Host }}' \
     GBT_CAR__HOSTNAME__BG=red \
@@ -123,8 +131,8 @@ RUN echo "PS1='\$(gbt \$?)'" >> /etc/skel/.bashrc \
     && { [ -d /home/dev ] && echo "PS1='\$(gbt \$?)'" >> /home/dev/.bashrc || true; }
 
 ARG WEB_ROOT=/home/wobble/web
-RUN mkdir -p "$(dirname "$WEB_ROOT")" && ln -s /srv/web "$WEB_ROOT"
+RUN mkdir -p "$WEB_ROOT"
 
 RUN chmod 1777 /tmp
 
-WORKDIR /srv/web
+WORKDIR $WEB_ROOT

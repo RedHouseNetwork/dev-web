@@ -5,11 +5,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      WEB_ROOT: ${WEB_ROOT}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./certs:/etc/caddy/certs:ro
       - ./overrides:/etc/caddy/overrides:ro
-      - web:/srv/web:ro
+      - web:${WEB_ROOT}:ro
     depends_on:
       - php83
       - php84
@@ -39,9 +41,12 @@ services:
     environment:
       PANTHER_NO_SANDBOX: 1
     volumes:
-      - web:/srv/web
+      - web:${WEB_ROOT}
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
+      - ./config/php83-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
+      - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
+      - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
     restart: unless-stopped
 
   php84:
@@ -68,9 +73,12 @@ services:
     environment:
       PANTHER_NO_SANDBOX: 1
     volumes:
-      - web:/srv/web
+      - web:${WEB_ROOT}
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
+      - ./config/php84-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
+      - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
+      - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
     restart: unless-stopped
 
   mysql:

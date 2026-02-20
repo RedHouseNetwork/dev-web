@@ -132,6 +132,43 @@ PHP84_CHROME_VERSION=
 
 Then rebuild the relevant container.
 
+## Per-container PHP overrides
+
+Each PHP container has its own ini override file that is loaded after the shared
+`config/php.ini`. Use these to set per-container values for settings like
+`zend.assertions`:
+
+| Container | Override file |
+|-----------|--------------|
+| php83 | `config/php83-overrides.ini` |
+| php84 | `config/php84-overrides.ini` |
+
+For example, to enable assertions in the PHP 8.4 container (useful for running
+tests) while keeping them compiled out in PHP 8.3:
+
+```ini
+# config/php84-overrides.ini
+zend.assertions = 1
+```
+
+## Claude Code in containers
+
+The PHP containers mount the host's Claude Code binary and credentials at
+runtime, so you can run `claude` inside a container without re-authenticating.
+
+**Prerequisites:** Claude Code must be installed on the host (`~/.local/bin/claude`).
+
+The credentials file (`~/.claude/.credentials.json`) is mounted read-only and
+is never baked into the Docker image. The Dockerfile only creates an empty
+writable `~/.claude/` directory for Claude's session state.
+
+To use it, shell into a container and run `claude`:
+
+```
+php84-sh
+claude
+```
+
 ## Per-site header overrides
 
 Some sites need custom request headers for local development (e.g. faking Google IAP
@@ -176,6 +213,8 @@ compose.yaml        # Service definitions
 Caddyfile           # Reverse proxy routing
 Dockerfile.php      # PHP-FPM image build
 config/my.cnf       # MySQL 8.0 config
+config/php83-overrides.ini  # Per-container PHP overrides (php83)
+config/php84-overrides.ini  # Per-container PHP overrides (php84)
 overrides/          # Per-site Caddy header overrides (not in git)
 scripts/            # Helper scripts (cert generation)
 .env                # Database passwords (not in git)
