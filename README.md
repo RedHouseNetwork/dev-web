@@ -158,9 +158,16 @@ runtime, so you can run `claude` inside a container without re-authenticating.
 
 **Prerequisites:** Claude Code must be installed on the host (`~/.local/bin/claude`).
 
-The credentials file (`~/.claude/.credentials.json`) is mounted read-only and
-is never baked into the Docker image. The Dockerfile only creates an empty
-writable `~/.claude/` directory for Claude's session state.
+Three files are mounted read-only from the host at runtime — nothing secret is
+baked into the Docker image:
+
+- `~/.local/bin/claude` — the CLI binary
+- `~/.claude/.credentials.json` — OAuth tokens
+- `~/.claude.json` — onboarding/config state (without this, Claude shows the
+  first-run setup even though credentials are valid)
+
+The Dockerfile creates an empty writable `~/.claude/` directory so Claude can
+write session state inside the container.
 
 To use it, shell into a container and run `claude`:
 

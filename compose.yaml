@@ -40,6 +40,8 @@ services:
         hard: 65536
     environment:
       PANTHER_NO_SANDBOX: 1
+      HOME: /home/dev
+      CLAUDE_AUTO_UPDATE: 0
     volumes:
       - web:${WEB_ROOT}
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
@@ -47,6 +49,7 @@ services:
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
       - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
       - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
+      - ${HOME}/.claude.json:/home/dev/.claude.json
     restart: unless-stopped
 
   php84:
@@ -72,6 +75,8 @@ services:
         hard: 65536
     environment:
       PANTHER_NO_SANDBOX: 1
+      HOME: /home/dev
+      CLAUDE_AUTO_UPDATE: 0
     volumes:
       - web:${WEB_ROOT}
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
@@ -79,6 +84,7 @@ services:
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
       - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
       - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
+      - ${HOME}/.claude.json:/home/dev/.claude.json
     restart: unless-stopped
 
   mysql:

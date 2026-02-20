@@ -124,9 +124,10 @@ RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
     && chown ${HOST_UID}:${HOST_UID} "$HOME_DIR/.claude"
 
 # Activate gbt prompt for interactive shells
-ENV GBT_CAR__HOSTNAME__FORMAT='{{ .Host }}' \
-    GBT_CAR__HOSTNAME__BG=red \
-    GBT_CAR__HOSTNAME__FG=white
+ENV GBT_CARS='Hostname, Dir, Git, Sign' \
+    GBT_CAR_HOSTNAME_FORMAT=' {{ Host }} ' \
+    GBT_CAR_HOSTNAME_BG=red \
+    GBT_CAR_HOSTNAME_FG=white
 RUN echo "PS1='\$(gbt \$?)'" >> /etc/skel/.bashrc \
     && { [ -d /home/dev ] && echo "PS1='\$(gbt \$?)'" >> /home/dev/.bashrc || true; }
 
