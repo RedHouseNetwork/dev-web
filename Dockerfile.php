@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng-dev \
         libjpeg62-turbo-dev \
         libfreetype6-dev \
+        libwebp-dev \
         libxml2-dev \
         libonig-dev \
         libgmp-dev \
@@ -15,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         iproute2 \
         iputils-ping \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
         intl \
         pdo_mysql \
@@ -29,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pecl install apcu \
     && docker-php-ext-enable apcu \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && apt-get update && apt-get install -y --no-install-recommends libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
 ARG INSTALL_XDEBUG=""
