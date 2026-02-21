@@ -29,6 +29,7 @@ services:
         SQLCIPHER_VERSION: ${PHP83_SQLCIPHER_VERSION:-}
         CHROME_VERSION: ${PHP83_CHROME_VERSION:-128.0.6613.137}
         INSTALL_XDEBUG: ${PHP83_XDEBUG:-}
+        INSTALL_FFMPEG: ${PHP83_FFMPEG:-}
     hostname: PHP83
     user: "${UID}:${UID}"
     shm_size: '2g'
@@ -42,6 +43,7 @@ services:
       PANTHER_NO_SANDBOX: 1
       HOME: /home/dev
       CLAUDE_AUTO_UPDATE: 0
+      TMPDIR: /tmp
     volumes:
       - web:${WEB_ROOT}
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
@@ -64,6 +66,7 @@ services:
         SQLCIPHER_VERSION: ${PHP84_SQLCIPHER_VERSION:-}
         CHROME_VERSION: ${PHP84_CHROME_VERSION:-128.0.6613.137}
         INSTALL_XDEBUG: ${PHP84_XDEBUG:-}
+        INSTALL_FFMPEG: ${PHP84_FFMPEG:-}
     hostname: PHP84
     user: "${UID}:${UID}"
     shm_size: '2g'
@@ -77,6 +80,7 @@ services:
       PANTHER_NO_SANDBOX: 1
       HOME: /home/dev
       CLAUDE_AUTO_UPDATE: 0
+      TMPDIR: /tmp
     volumes:
       - web:${WEB_ROOT}
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro

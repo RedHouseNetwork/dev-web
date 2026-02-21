@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         iproute2 \
         iputils-ping \
+        nano \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
         intl \
@@ -99,6 +100,18 @@ RUN if [ -n "$CHROME_VERSION" ]; then \
     && rm /tmp/chrome.zip /tmp/chromedriver.zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     ; fi
+
+ARG INSTALL_FFMPEG=""
+# Optional: install ffmpeg and yt-dlp for media processing.
+# Enabled by setting PHP83_FFMPEG=1 or PHP84_FFMPEG=1 in .env.
+RUN if [ -n "${INSTALL_FFMPEG}" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && ARCH=$(dpkg --print-architecture) \
+    && if [ "$ARCH" = "amd64" ]; then YT_BIN="yt-dlp_linux"; else YT_BIN="yt-dlp_linux_aarch64"; fi \
+    && curl -fsSL "https://github.com/yt-dlp/yt-dlp/releases/latest/download/${YT_BIN}" -o /usr/local/bin/yt-dlp \
+    && chmod +x /usr/local/bin/yt-dlp \
+    && rm -rf /var/lib/apt/lists/*; \
+fi
 
 # Install gbt prompt (https://github.com/jtyr/gbt)
 ARG TARGETARCH
