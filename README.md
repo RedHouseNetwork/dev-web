@@ -28,10 +28,11 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 3. **Build and start:**
 
    ```
-   docker compose up -d --build
+   ./build.sh
    ```
 
-   This starts Caddy, PHP 8.3, PHP 8.4, and MySQL 8.0 by default.
+   This builds all images, restarts all services, and starts Caddy, PHP 8.3,
+   PHP 8.4, and MySQL 8.0 by default.
 
 ## Services
 
@@ -132,6 +133,22 @@ PHP84_CHROME_VERSION=
 
 Then rebuild the relevant container.
 
+## ffmpeg + yt-dlp (optional)
+
+The PHP containers can optionally include [ffmpeg](https://ffmpeg.org/) and
+[yt-dlp](https://github.com/yt-dlp/yt-dlp) for media processing. To enable,
+set the build arg in your `.env`:
+
+```
+PHP84_FFMPEG=1
+```
+
+Then rebuild: `docker compose build php84`.
+
+yt-dlp is installed as an architecture-specific standalone binary (no Python
+required). The containers set `TMPDIR=/tmp` so the binary can decompress at
+runtime.
+
 ## Per-container PHP overrides
 
 Each PHP container has its own ini override file that is loaded after the shared
@@ -215,6 +232,7 @@ run e.g. `php84-sh` from anywhere to get a shell in the PHP 8.4 container.
 ## File layout
 
 ```
+build.sh            # Rebuild and restart everything
 bin/                # Shell shortcuts for each container
 compose.yaml        # Service definitions
 Caddyfile           # Reverse proxy routing
