@@ -49,6 +49,8 @@ services:
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
       - ./config/php83-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
+      - ${HOME}/.ssh:/home/dev/.ssh:ro
+      - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
       - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
       - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
       - ${HOME}/.claude.json:/home/dev/.claude.json
@@ -86,6 +88,8 @@ services:
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
       - ./config/php84-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
+      - ${HOME}/.ssh:/home/dev/.ssh:ro
+      - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
       - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
       - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
       - ${HOME}/.claude.json:/home/dev/.claude.json

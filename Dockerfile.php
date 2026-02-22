@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         iproute2 \
         iputils-ping \
+        openssh-client \
         nano \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
@@ -121,6 +122,10 @@ RUN curl -fsSL "https://github.com/jtyr/gbt/releases/download/v2.0.0/gbt-2.0.0-l
     && mv /tmp/gbt-2.0.0/gbt /usr/local/bin/gbt \
     && rm -rf /tmp/gbt.tar.gz /tmp/gbt-2.0.0
 
+# Rewrite HTTPS GitHub URLs to SSH so Composer uses the mounted SSH keys
+# for private repositories instead of requiring a personal access token.
+RUN git config --system url."git@github.com:".insteadOf "https://github.com/"
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Create user/group for host UID so shell doesn't show "I have no name!"
@@ -136,7 +141,10 @@ RUN if ! getent group ${HOST_UID} >/dev/null; then \
 # The actual credentials are mounted at runtime — nothing secret is baked in.
 RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
     && mkdir -p "$HOME_DIR/.claude" \
-    && chown ${HOST_UID}:${HOST_UID} "$HOME_DIR/.claude"
+    && chown ${HOST_UID}:${HOST_UID} "$HOME_DIR/.claude" \
+    && mkdir -p "$HOME_DIR/.config/composer" \
+    && echo '{"config":{"github-protocols":["ssh"],"use-github-api":false}}' > "$HOME_DIR/.config/composer/config.json" \
+    && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.config/composer"
 
 # Activate gbt prompt for interactive shells
 ENV GBT_CARS='Hostname, Dir, Git, Sign' \
