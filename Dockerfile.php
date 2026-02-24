@@ -144,7 +144,7 @@ RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
     && chown ${HOST_UID}:${HOST_UID} "$HOME_DIR/.claude" \
     && mkdir -p "$HOME_DIR/.config/composer" \
     && echo '{"config":{"github-protocols":["ssh"],"use-github-api":false}}' > "$HOME_DIR/.config/composer/config.json" \
-    && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.config/composer"
+    && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.config"
 
 # Activate gbt prompt for interactive shells
 ENV GBT_CARS='Hostname, Dir, Git, Sign' \
