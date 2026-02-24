@@ -167,6 +167,24 @@ services:
       - ./data/postgres:/var/lib/postgresql/data
       - web:/web
 
+  samba:
+    container_name: samba
+    build:
+      context: .
+      dockerfile: Dockerfile.samba
+    profiles: [samba]
+    restart: unless-stopped
+    environment:
+      SAMBA_ROOT: ${SAMBA_ROOT:-}
+      SAMBA_USER: ${SAMBA_USER:-}
+      SAMBA_PASSWORD: ${SAMBA_PASSWORD:-}
+      HOST_UID: ${UID}
+    ports:
+      - "445:445"
+    volumes:
+      - ${SAMBA_ROOT:-.}:/share
+      - ./config/smb.conf:/etc/samba/smb.conf:ro
+
 volumes:
   web:
     driver: local

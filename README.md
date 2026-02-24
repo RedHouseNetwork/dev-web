@@ -46,14 +46,22 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 | mariadb | mariadb:11.1 | 3406 | No |
 | mssql | mssql/server:2022 | 1433 | No |
 | postgres | postgres | 5432 | No |
+| samba | alpine + samba | 445 | No |
 
 ## Starting optional databases
 
-Non-default databases use [Compose profiles](https://docs.docker.com/compose/how-tos/profiles/). Enable them with `--profile`:
+Non-default services use [Compose profiles](https://docs.docker.com/compose/how-tos/profiles/). Enable them with `--profile`:
 
 ```
 docker compose --profile postgres up -d
 docker compose --profile mariadb --profile mssql up -d
+```
+
+Alternatively, set `COMPOSE_PROFILES` in your `.env` so the same `docker compose up -d`
+(or `./build.sh`) command works everywhere:
+
+```
+COMPOSE_PROFILES=postgres,samba
 ```
 
 ## Accessing databases
@@ -149,6 +157,25 @@ yt-dlp is installed as an architecture-specific standalone binary (no Python
 required). The containers set `TMPDIR=/tmp` so the binary can decompress at
 runtime.
 
+## Samba file sharing (optional)
+
+The stack can expose a host directory as an SMB share for access from other machines
+on the local network. Add the following to your `.env`:
+
+```
+COMPOSE_PROFILES=samba
+SAMBA_ROOT=/home/wobble
+SAMBA_PASSWORD=changeme
+```
+
+`SAMBA_USER` defaults to the last component of `SAMBA_ROOT` (e.g. `wobble`). Override
+it explicitly if needed.
+
+Then rebuild: `./build.sh` or `docker compose up -d`.
+
+Connect from another machine using `smb://<host-ip>/home` with the configured
+credentials.
+
 ## Per-container PHP overrides
 
 Each PHP container has its own ini override file that is loaded after the shared
@@ -237,7 +264,9 @@ bin/                # Shell shortcuts for each container
 compose.yaml        # Service definitions
 Caddyfile           # Reverse proxy routing
 Dockerfile.php      # PHP-FPM image build
+Dockerfile.samba    # Samba file sharing image
 config/my.cnf       # MySQL 8.0 config
+config/smb.conf     # Samba share config
 config/php83-overrides.ini  # Per-container PHP overrides (php83)
 config/php84-overrides.ini  # Per-container PHP overrides (php84)
 overrides/          # Per-site Caddy header overrides (not in git)
