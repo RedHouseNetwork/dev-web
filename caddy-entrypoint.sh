@@ -63,9 +63,9 @@ for entry in $CADDY_SITES; do
     [ -z "$backend" ] && backend="$domain"
 
     if [ -n "$subdir" ]; then
-        root_path="${WEB_ROOT}/${subdir}/{re.site${i}.1}.symf/public"
+        root_path="${WEB_ROOT}/${subdir}/{re.site${i}.1}/public"
     else
-        root_path="${WEB_ROOT}/{re.site${i}.1}.symf/public"
+        root_path="${WEB_ROOT}/{re.site${i}.1}/public"
     fi
 
     cat >> /etc/caddy/Caddyfile <<SITE

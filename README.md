@@ -83,8 +83,8 @@ format `domain[:backend[:subdir]]`:
 
 The default is `CADDY_SITES=php83,php84`, which creates:
 
-- `*.php83.symf4` &rarr; PHP 8.3 (`~/web/<name>.symf/public/`)
-- `*.php84.symf4` &rarr; PHP 8.4 (`~/web/<name>.symf/public/`)
+- `*.php83.symf4` &rarr; PHP 8.3 (`~/web/<name>/public/`)
+- `*.php84.symf4` &rarr; PHP 8.4 (`~/web/<name>/public/`)
 
 To add a custom route (e.g. for projects in a subdirectory):
 
@@ -92,7 +92,7 @@ To add a custom route (e.g. for projects in a subdirectory):
 CADDY_SITES=php83,php84,home:php84:home-network
 ```
 
-This adds `*.home.symf4` &rarr; PHP 8.4 (`~/web/home-network/<name>.symf/public/`).
+This adds `*.home.symf4` &rarr; PHP 8.4 (`~/web/home-network/<name>/public/`).
 
 The TLD defaults to `symf4` and can be changed with `SITE_TLD` in `.env`.
 
@@ -265,8 +265,8 @@ into the Caddyfile before the wildcard routing rules.
    handle @myproject {
        request_header X-Goog-Iap-Jwt-Assertion "foo"
        request_header X-Goog-Authenticated-User-Email "user@example.com"
-       root * /srv/web/myproject.symf/public
-       import php_common php84 /srv/web/myproject.symf/public
+       root * /srv/web/myproject/public
+       import php_common php84 /srv/web/myproject/public
    }
    ```
 
