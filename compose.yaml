@@ -7,11 +7,14 @@ services:
       - "443:443"
     environment:
       WEB_ROOT: ${WEB_ROOT}
+      CADDY_SITES: ${CADDY_SITES:-php83,php84}
+      SITE_TLD: ${SITE_TLD:-symf4}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-entrypoint.sh:/entrypoint.sh:ro
       - ./certs:/etc/caddy/certs:ro
       - ./overrides:/etc/caddy/overrides:ro
       - web:${WEB_ROOT}:ro
+    entrypoint: /entrypoint.sh
     depends_on:
       - php83
       - php84
@@ -30,6 +33,7 @@ services:
         CHROME_VERSION: ${PHP83_CHROME_VERSION:-128.0.6613.137}
         INSTALL_XDEBUG: ${PHP83_XDEBUG:-}
         INSTALL_FFMPEG: ${PHP83_FFMPEG:-}
+        NODE_VERSIONS: ${PHP83_NODE_VERSIONS:-}
     hostname: PHP83
     user: "${UID}:${UID}"
     shm_size: '2g'
@@ -52,7 +56,7 @@ services:
       - ${HOME}/.ssh:/home/dev/.ssh:ro
       - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
       - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
-      - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
+      - ${HOME}/.claude:/home/dev/.claude
       - ${HOME}/.claude.json:/home/dev/.claude.json
     restart: unless-stopped
 
@@ -69,6 +73,7 @@ services:
         CHROME_VERSION: ${PHP84_CHROME_VERSION:-128.0.6613.137}
         INSTALL_XDEBUG: ${PHP84_XDEBUG:-}
         INSTALL_FFMPEG: ${PHP84_FFMPEG:-}
+        NODE_VERSIONS: ${PHP84_NODE_VERSIONS:-}
     hostname: PHP84
     user: "${UID}:${UID}"
     shm_size: '2g'
@@ -91,7 +96,7 @@ services:
       - ${HOME}/.ssh:/home/dev/.ssh:ro
       - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
       - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
-      - ${HOME}/.claude/.credentials.json:/home/dev/.claude/.credentials.json:ro
+      - ${HOME}/.claude:/home/dev/.claude
       - ${HOME}/.claude.json:/home/dev/.claude.json
     restart: unless-stopped
 

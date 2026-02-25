@@ -128,6 +128,10 @@ RUN git config --system url."git@github.com:".insteadOf "https://github.com/"
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Install Symfony CLI
+RUN curl -sS https://get.symfony.com/cli/installer | bash \
+    && mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+
 # Create user/group for host UID so shell doesn't show "I have no name!"
 ARG HOST_UID=1000
 RUN if ! getent group ${HOST_UID} >/dev/null; then \
@@ -145,6 +149,24 @@ RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
     && mkdir -p "$HOME_DIR/.config/composer" \
     && echo '{"config":{"github-protocols":["ssh"],"use-github-api":false}}' > "$HOME_DIR/.config/composer/config.json" \
     && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.config"
+
+ARG NODE_VERSIONS=""
+# Optional: install nvm and Node.js versions.
+# Enabled by setting NODE_VERSIONS to a comma-separated list (e.g. "18,20,22").
+RUN if [ -n "${NODE_VERSIONS}" ]; then \
+    HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
+    && export NVM_DIR="$HOME_DIR/.nvm" \
+    && mkdir -p "$NVM_DIR" \
+    && curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | PROFILE=/dev/null bash \
+    && . "$NVM_DIR/nvm.sh" \
+    && IFS=',' ; for ver in ${NODE_VERSIONS}; do \
+        ver=$(echo "$ver" | xargs); \
+        [ -n "$ver" ] && nvm install "$ver"; \
+    done \
+    && chown -R ${HOST_UID}:${HOST_UID} "$NVM_DIR" \
+    && echo 'export NVM_DIR="$HOME/.nvm"' >> "$HOME_DIR/.bashrc" \
+    && echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> "$HOME_DIR/.bashrc"; \
+fi
 
 # Activate gbt prompt for interactive shells
 ENV GBT_CARS='Hostname, Dir, Git, Sign' \

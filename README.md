@@ -73,14 +73,28 @@ From the host, connect via the mapped ports listed above.
 
 ## Web projects
 
-Sites are served from the `web` volume (bound to `~/web`). The Caddyfile routes
-requests based on the Host header:
+Sites are served from the `web` volume (bound to `~/web`). Caddy routing is
+driven by the `CADDY_SITES` env var — a comma-separated list of entries in the
+format `domain[:backend[:subdir]]`:
 
-- `*.php83.symf4` &rarr; PHP 8.3
-- `*.php84.symf4` &rarr; PHP 8.4
-- `*.home.symf4` &rarr; PHP 8.4 (`~/web/home-network/`)
+- **domain** — used in the Host regex (e.g. `php83` matches `*.php83.symf4`)
+- **backend** — PHP-FPM container name (defaults to the domain name)
+- **subdir** — optional subdirectory under `WEB_ROOT`
 
-Each project is expected at `~/web/<name>.symf/public/`.
+The default is `CADDY_SITES=php83,php84`, which creates:
+
+- `*.php83.symf4` &rarr; PHP 8.3 (`~/web/<name>.symf/public/`)
+- `*.php84.symf4` &rarr; PHP 8.4 (`~/web/<name>.symf/public/`)
+
+To add a custom route (e.g. for projects in a subdirectory):
+
+```
+CADDY_SITES=php83,php84,home:php84:home-network
+```
+
+This adds `*.home.symf4` &rarr; PHP 8.4 (`~/web/home-network/<name>.symf/public/`).
+
+The TLD defaults to `symf4` and can be changed with `SITE_TLD` in `.env`.
 
 Pointing these hostnames at your machine is your responsibility — configure your
 router, `/etc/hosts`, dnsmasq, or similar to resolve `*.symf4` to the host running
@@ -157,6 +171,25 @@ yt-dlp is installed as an architecture-specific standalone binary (no Python
 required). The containers set `TMPDIR=/tmp` so the binary can decompress at
 runtime.
 
+## nvm / Node.js (optional)
+
+The PHP containers can optionally include [nvm](https://github.com/nvm-sh/nvm) and
+one or more Node.js versions. To enable, set the versions in your `.env`:
+
+```
+PHP84_NODE_VERSIONS=18,20,22
+```
+
+Then rebuild: `docker compose build php84`.
+
+The first version listed becomes the nvm default. Inside the container:
+
+```
+node --version   # default version
+nvm use 18       # switch versions
+nvm ls           # list installed versions
+```
+
 ## Samba file sharing (optional)
 
 The stack can expose a host directory as an SMB share for access from other machines
@@ -197,21 +230,19 @@ zend.assertions = 1
 
 ## Claude Code in containers
 
-The PHP containers mount the host's Claude Code binary and credentials at
-runtime, so you can run `claude` inside a container without re-authenticating.
+The PHP containers mount the host's Claude Code binary and state at runtime, so
+you can run `claude` inside a container without re-authenticating — and resume
+previous conversations with `/resume`.
 
 **Prerequisites:** Claude Code must be installed on the host (`~/.local/bin/claude`).
 
-Three files are mounted read-only from the host at runtime — nothing secret is
-baked into the Docker image:
+Two mounts are used:
 
-- `~/.local/bin/claude` — the CLI binary
-- `~/.claude/.credentials.json` — OAuth tokens
-- `~/.claude.json` — onboarding/config state (without this, Claude shows the
-  first-run setup even though credentials are valid)
+- `~/.local/bin/claude` — the CLI binary (read-only)
+- `~/.claude/` — credentials, config, and conversation history (read-write)
 
-The Dockerfile creates an empty writable `~/.claude/` directory so Claude can
-write session state inside the container.
+The `~/.claude.json` config file is also mounted so Claude skips the first-run
+setup.
 
 To use it, shell into a container and run `claude`:
 
@@ -262,7 +293,7 @@ run e.g. `php84-sh` from anywhere to get a shell in the PHP 8.4 container.
 build.sh            # Rebuild and restart everything
 bin/                # Shell shortcuts for each container
 compose.yaml        # Service definitions
-Caddyfile           # Reverse proxy routing
+caddy-entrypoint.sh # Generates Caddyfile from CADDY_SITES env and starts Caddy
 Dockerfile.php      # PHP-FPM image build
 Dockerfile.samba    # Samba file sharing image
 config/my.cnf       # MySQL 8.0 config
