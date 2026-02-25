@@ -160,6 +160,8 @@ RUN if [ -n "${NODE_VERSIONS}" ]; then \
         ver=$(echo "$ver" | xargs); \
         [ -n "$ver" ] && nvm install "$ver"; \
     done \
+    && corepack enable \
+    && corepack prepare yarn@stable --activate \
     && chown -R ${HOST_UID}:${HOST_UID} "$NVM_DIR" \
     && echo 'export NVM_DIR="$HOME/.nvm"' >> "$HOME_DIR/.bashrc" \
     && echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> "$HOME_DIR/.bashrc"; \
