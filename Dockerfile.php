@@ -122,10 +122,6 @@ RUN curl -fsSL "https://github.com/jtyr/gbt/releases/download/v2.0.0/gbt-2.0.0-l
     && mv /tmp/gbt-2.0.0/gbt /usr/local/bin/gbt \
     && rm -rf /tmp/gbt.tar.gz /tmp/gbt-2.0.0
 
-# Rewrite HTTPS GitHub URLs to SSH so Composer uses the mounted SSH keys
-# for private repositories instead of requiring a personal access token.
-RUN git config --system url."git@github.com:".insteadOf "https://github.com/"
-
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Install Symfony CLI
@@ -153,6 +149,7 @@ RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
 ARG NODE_VERSIONS=""
 # Optional: install nvm and Node.js versions.
 # Enabled by setting NODE_VERSIONS to a comma-separated list (e.g. "18,20,22").
+# Must run BEFORE the git SSH rewrite below, since nvm's installer clones from GitHub via HTTPS.
 RUN if [ -n "${NODE_VERSIONS}" ]; then \
     HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
     && export NVM_DIR="$HOME_DIR/.nvm" \
@@ -167,6 +164,10 @@ RUN if [ -n "${NODE_VERSIONS}" ]; then \
     && echo 'export NVM_DIR="$HOME/.nvm"' >> "$HOME_DIR/.bashrc" \
     && echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> "$HOME_DIR/.bashrc"; \
 fi
+
+# Rewrite HTTPS GitHub URLs to SSH so Composer uses the mounted SSH keys
+# for private repositories instead of requiring a personal access token.
+RUN git config --system url."git@github.com:".insteadOf "https://github.com/"
 
 # Activate gbt prompt for interactive shells
 ENV GBT_CARS='Hostname, Dir, Git, Sign' \
