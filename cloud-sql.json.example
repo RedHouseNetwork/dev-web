@@ -1,0 +1,17 @@
+{
+  "_comment": "Cloud SQL Auth Proxy instance configuration. Copy to cloud-sql.json and fill in values.",
+  "_setup": [
+    "1. Copy this file: cp cloud-sql.json.example cloud-sql.json",
+    "2. Authenticate: ./bin/cloud-sql auth (or provide per-instance service account key files)",
+    "3. Fill in instance connection strings (GCP Console > SQL > Instance > Overview > Connection name)",
+    "4. Run: ./bin/cloud-sql up <name>"
+  ],
+  "port": 3307,
+  "example-with-key": {
+    "instance": "my-project:us-central1:my-instance",
+    "credentials": "/home/wobble/web/my-app/local/keys/nonprod.json"
+  },
+  "example-with-adc": {
+    "instance": "my-project:europe-west1:my-other-instance"
+  }
+}

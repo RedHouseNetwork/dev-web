@@ -1,0 +1,5 @@
+FROM gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.21.1 AS proxy
+FROM alpine:3.21
+RUN apk add --no-cache jq
+COPY --from=proxy /cloud-sql-proxy /usr/local/bin/cloud-sql-proxy
+CMD ["sleep", "infinity"]

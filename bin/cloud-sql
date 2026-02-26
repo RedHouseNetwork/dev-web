@@ -1,0 +1,204 @@
+#!/bin/bash
+#
+# Cloud SQL Auth Proxy helper — singleton mode.
+# Only one proxy runs at a time on a single fixed port.
+# Starting a new instance automatically stops any running one.
+#
+# Setup:
+#   1. cp cloud-sql.json.example cloud-sql.json
+#   2. Authenticate: ./bin/cloud-sql auth
+#      — or provide service account key files (see cloud-sql.json.example)
+#   3. Fill in instance connection strings
+#      (GCP Console > SQL > Instance > Overview > Connection name)
+#   4. ./bin/cloud-sql up <name>
+#
+# Usage:
+#   ./bin/cloud-sql up <name>    Start proxy (stops any running one first)
+#   ./bin/cloud-sql down [name]  Stop proxy (optionally only if <name> is active)
+#   ./bin/cloud-sql ls           List configured instances and status
+#   ./bin/cloud-sql auth         Authenticate with GCP (application default credentials)
+
+set -euo pipefail
+
+# Colours (disabled if stdout is not a terminal)
+if [ -t 1 ]; then
+    GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[0;33m'
+    BOLD='\033[1m' DIM='\033[2m' RESET='\033[0m'
+else
+    GREEN='' RED='' YELLOW='' BOLD='' DIM='' RESET=''
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CONFIG="$SCRIPT_DIR/cloud-sql.json"
+CONTAINER="cloud-sql-proxy"
+GCLOUD_DIR="$SCRIPT_DIR/data/gcloud"
+
+if [ ! -f "$CONFIG" ]; then
+    echo "Error: $CONFIG not found. Copy cloud-sql.json.example and configure it." >&2
+    exit 1
+fi
+
+# Read instance names from config (skip keys starting with _ and top-level "port")
+instance_names() {
+    jq -r 'keys[] | select(startswith("_") | not) | select(. != "port")' "$CONFIG"
+}
+
+instance_field() {
+    local name="$1" field="$2"
+    jq -r --arg n "$name" --arg f "$field" '.[$n][$f]' "$CONFIG"
+}
+
+global_port() {
+    jq -r '.port' "$CONFIG"
+}
+
+# Return the name of the currently running instance, or empty string
+running_instance() {
+    for name in $(instance_names); do
+        local instance
+        instance=$(instance_field "$name" "instance")
+        if docker exec "$CONTAINER" sh -c "ps aux 2>/dev/null | grep -q '[c]loud-sql-proxy.*$instance'" 2>/dev/null; then
+            echo "$name"
+            return
+        fi
+    done
+}
+
+kill_proxy() {
+    docker exec "$CONTAINER" sh -c "pkill -f 'cloud-sql-proxy' || true" 2>/dev/null || true
+}
+
+cmd_auth() {
+    mkdir -p "$GCLOUD_DIR"
+    docker run --rm -it \
+        -v "$GCLOUD_DIR:/root/.config/gcloud" \
+        gcr.io/google.com/cloudsdktool/cloud-sdk:alpine \
+        gcloud auth application-default login --no-launch-browser
+}
+
+cmd_up() {
+    local name="$1"
+    local port instance credentials creds_arg
+
+    # Validate instance exists in config
+    if [ "$(instance_field "$name" "instance")" = "null" ]; then
+        echo "Error: unknown instance '$name'" >&2
+        echo "Available: $(instance_names | tr '\n' ' ')" >&2
+        exit 1
+    fi
+
+    port=$(global_port)
+    instance=$(instance_field "$name" "instance")
+    credentials=$(instance_field "$name" "credentials")
+
+    if [ "$credentials" != "null" ] && [ -n "$credentials" ]; then
+        creds_arg="--credentials-file '$credentials'"
+    else
+        creds_arg=""
+    fi
+
+    local current
+    current=$(running_instance)
+
+    if [ "$current" = "$name" ]; then
+        echo -e "${YELLOW}$name: already running (port $port)${RESET}"
+        return
+    fi
+
+    if [ -n "$current" ]; then
+        echo -e "${RED}$current: stopping${RESET} (switching to $name)"
+        kill_proxy
+        sleep 0.5
+    fi
+
+    echo -e "${GREEN}$name: starting proxy on port $port${RESET} -> $instance"
+    docker exec -d "$CONTAINER" \
+        sh -c "cloud-sql-proxy \
+        --address 0.0.0.0 \
+        --port $port \
+        $creds_arg \
+        '$instance' \
+        >/proc/1/fd/1 2>/proc/1/fd/2"
+}
+
+cmd_down() {
+    local name="${1:-}"
+    local current
+    current=$(running_instance)
+
+    if [ -z "$current" ]; then
+        echo -e "${DIM}No proxy running${RESET}"
+        return
+    fi
+
+    if [ -n "$name" ] && [ "$name" != "$current" ]; then
+        echo -e "${YELLOW}$name: not running${RESET} (active instance is $current)"
+        return
+    fi
+
+    echo -e "${RED}$current: stopping${RESET}"
+    kill_proxy
+}
+
+cmd_ls() {
+    local port current
+    port=$(global_port)
+    current=$(running_instance)
+
+    if [ -n "$current" ]; then
+        local instance
+        instance=$(instance_field "$current" "instance")
+        echo -e "${BOLD}Active:${RESET} ${GREEN}$current${RESET} (port $port)"
+        echo -e "        ${DIM}$instance${RESET}"
+    else
+        echo -e "${BOLD}Active:${RESET} ${DIM}none${RESET}"
+    fi
+
+    echo ""
+    echo -e "${BOLD}Available instances:${RESET}"
+    for name in $(instance_names); do
+        if [ "$name" = "$current" ]; then
+            echo -e "  ${GREEN}* $name${RESET}"
+        else
+            echo "    $name"
+        fi
+    done
+}
+
+usage() {
+    echo "Usage: $0 up <name>      Start proxy (stops any running one first)"
+    echo "       $0 down [name]    Stop proxy (optionally only if <name> is active)"
+    echo "       $0 ls             List configured instances and status"
+    echo "       $0 auth           Authenticate with GCP (application default credentials)"
+    exit 1
+}
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+ACTION="$1"
+NAME="${2:-}"
+
+case "$ACTION" in
+    up)
+        if [ -z "$NAME" ]; then
+            echo "Error: 'up' requires an instance name (singleton mode)" >&2
+            echo "Available: $(instance_names | tr '\n' ' ')" >&2
+            exit 1
+        fi
+        cmd_up "$NAME"
+        ;;
+    down)
+        cmd_down "$NAME"
+        ;;
+    ls)
+        cmd_ls
+        ;;
+    auth)
+        cmd_auth
+        ;;
+    *)
+        usage
+        ;;
+esac

@@ -190,6 +190,21 @@ services:
       - ${SAMBA_ROOT:-.}:/share
       - ./config/smb.conf:/etc/samba/smb.conf:ro
 
+  cloud-sql-proxy:
+    container_name: cloud-sql-proxy
+    build:
+      context: .
+      dockerfile: Dockerfile.cloud-sql-proxy
+    ports:
+      - "${CLOUD_SQL_PORT:-3307}:${CLOUD_SQL_PORT:-3307}"
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /adc/application_default_credentials.json
+    volumes:
+      - web:${WEB_ROOT}:ro
+      - ./cloud-sql.json:/etc/cloud-sql/config.json:ro
+      - ./data/gcloud:/adc:ro
+    restart: unless-stopped
+
 volumes:
   web:
     driver: local

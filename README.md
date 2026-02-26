@@ -47,6 +47,7 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 | mssql | mssql/server:2022 | 1433 | No |
 | postgres | postgres | 5432 | No |
 | samba | alpine + samba | 445 | No |
+| cloud-sql-proxy | cloud-sql-proxy:2 | 3307 | No |
 
 ## Starting optional databases
 
@@ -209,6 +210,69 @@ Then rebuild: `./build.sh` or `docker compose up -d`.
 Connect from another machine using `smb://<host-ip>/home` with the configured
 credentials.
 
+## Cloud SQL Auth Proxy (optional)
+
+The stack includes a [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy)
+container for connecting to GCP Cloud SQL instances. Only one proxy runs at a time
+(singleton mode) — starting a new instance automatically stops the previous one.
+
+1. **Configure instances:**
+
+   ```
+   cp cloud-sql.json.example cloud-sql.json
+   ```
+
+   Add a top-level `port` and one entry per instance with `instance` (connection
+   string from **GCP Console > SQL > Instance > Overview > Connection name**).
+   Optionally include `credentials` pointing to a service account key file (must be
+   under `WEB_ROOT` so the container can see it). Instances without `credentials`
+   use application default credentials instead (see step 2).
+
+   ```json
+   {
+     "port": 3307,
+     "myapp-nonprod": {
+       "instance": "my-project:europe-west1:nonprod-v8",
+       "credentials": "/home/wobble/web/work/myapp/local/keys/nonprod.json"
+     },
+     "other-app": {
+       "instance": "other-project:europe-west1:nonprod-v8"
+     }
+   }
+   ```
+
+2. **Authenticate** — choose one or both methods depending on the project:
+
+   - **Application default credentials** (no key file needed): run
+     `./bin/cloud-sql auth` and follow the prompts — it gives you a URL to open in
+     any browser. Credentials are saved in `data/gcloud/` and shared with the proxy
+     container.
+
+   - **Service account key**: download a key from GCP Console (**IAM & Admin >
+     Service Accounts** > select account with **Cloud SQL Client** role > **Keys** >
+     **Add Key** > **JSON**) and save it to e.g.
+     `~/web/work/<project>/local/keys/<env>.json`. Set the `credentials` field in
+     `cloud-sql.json` to the file path.
+
+3. **Start the container:**
+
+   ```
+   docker compose up -d cloud-sql-proxy
+   ```
+
+4. **Manage proxy connections:**
+
+   ```
+   ./bin/cloud-sql up myapp-nonprod   # start proxy (stops any running one first)
+   ./bin/cloud-sql down               # stop the running proxy
+   ./bin/cloud-sql ls                 # list instances and status
+   ```
+
+   Logs appear in `docker compose logs cloud-sql-proxy`.
+
+   From other containers, connect to `cloud-sql-proxy:3307` (or whatever port you
+   configured).
+
 ## Per-container PHP overrides
 
 Each PHP container has its own ini override file that is loaded after the shared
@@ -295,6 +359,7 @@ bin/                # Shell shortcuts for each container
 compose.yaml        # Service definitions
 caddy-entrypoint.sh # Generates Caddyfile from CADDY_SITES env and starts Caddy
 Dockerfile.php      # PHP-FPM image build
+Dockerfile.cloud-sql-proxy  # Cloud SQL Auth Proxy image
 Dockerfile.samba    # Samba file sharing image
 config/my.cnf       # MySQL 8.0 config
 config/smb.conf     # Samba share config
@@ -302,6 +367,8 @@ config/php83-overrides.ini  # Per-container PHP overrides (php83)
 config/php84-overrides.ini  # Per-container PHP overrides (php84)
 overrides/          # Per-site Caddy header overrides (not in git)
 scripts/            # Helper scripts (cert generation)
+cloud-sql.json      # Cloud SQL proxy instance config (not in git)
+cloud-sql.json.example  # Cloud SQL proxy config template
 .env                # Database passwords (not in git)
 .env.example        # Password template
 data/               # Database data directories (not in git)
