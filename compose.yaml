@@ -55,7 +55,7 @@ services:
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
       - ${HOME}/.ssh:/home/dev/.ssh:ro
       - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
-      - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
+      - ${HOME}/.local/bin/claude:/home/dev/.local/bin/claude:ro
       - ${HOME}/.claude:/home/dev/.claude
       - ${HOME}/.claude.json:/home/dev/.claude.json
     restart: unless-stopped
@@ -95,7 +95,7 @@ services:
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
       - ${HOME}/.ssh:/home/dev/.ssh:ro
       - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
-      - ${HOME}/.local/bin/claude:/usr/local/bin/claude:ro
+      - ${HOME}/.local/bin/claude:/home/dev/.local/bin/claude:ro
       - ${HOME}/.claude:/home/dev/.claude
       - ${HOME}/.claude.json:/home/dev/.claude.json
     restart: unless-stopped
