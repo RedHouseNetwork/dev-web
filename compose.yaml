@@ -34,6 +34,7 @@ services:
         INSTALL_XDEBUG: ${PHP83_XDEBUG:-}
         INSTALL_FFMPEG: ${PHP83_FFMPEG:-}
         NODE_VERSIONS: ${PHP83_NODE_VERSIONS:-}
+        HOST_HOME: ${HOME}
     hostname: PHP83
     user: "${UID}:${UID}"
     shm_size: '2g'
@@ -45,7 +46,7 @@ services:
         hard: 65536
     environment:
       PANTHER_NO_SANDBOX: 1
-      HOME: /home/dev
+      HOME: ${HOME}
       CLAUDE_AUTO_UPDATE: 0
       TMPDIR: /tmp
     volumes:
@@ -53,11 +54,11 @@ services:
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
       - ./config/php83-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
-      - ${HOME}/.ssh:/home/dev/.ssh:ro
-      - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
-      - ${HOME}/.local/bin/claude:/home/dev/.local/bin/claude:ro
-      - ${HOME}/.claude:/home/dev/.claude
-      - ${HOME}/.claude.json:/home/dev/.claude.json
+      - ${HOME}/.ssh:${HOME}/.ssh:ro
+      - ${HOME}/.gitconfig:${HOME}/.gitconfig:ro
+      - ${HOME}/.local/bin/claude:${HOME}/.local/bin/claude:ro
+      - ${HOME}/.claude:${HOME}/.claude
+      - ${HOME}/.claude.json:${HOME}/.claude.json
     restart: unless-stopped
 
   php84:
@@ -74,6 +75,7 @@ services:
         INSTALL_XDEBUG: ${PHP84_XDEBUG:-}
         INSTALL_FFMPEG: ${PHP84_FFMPEG:-}
         NODE_VERSIONS: ${PHP84_NODE_VERSIONS:-}
+        HOST_HOME: ${HOME}
     hostname: PHP84
     user: "${UID}:${UID}"
     shm_size: '2g'
@@ -85,7 +87,7 @@ services:
         hard: 65536
     environment:
       PANTHER_NO_SANDBOX: 1
-      HOME: /home/dev
+      HOME: ${HOME}
       CLAUDE_AUTO_UPDATE: 0
       TMPDIR: /tmp
     volumes:
@@ -93,11 +95,11 @@ services:
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
       - ./config/php84-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
-      - ${HOME}/.ssh:/home/dev/.ssh:ro
-      - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
-      - ${HOME}/.local/bin/claude:/home/dev/.local/bin/claude:ro
-      - ${HOME}/.claude:/home/dev/.claude
-      - ${HOME}/.claude.json:/home/dev/.claude.json
+      - ${HOME}/.ssh:${HOME}/.ssh:ro
+      - ${HOME}/.gitconfig:${HOME}/.gitconfig:ro
+      - ${HOME}/.local/bin/claude:${HOME}/.local/bin/claude:ro
+      - ${HOME}/.claude:${HOME}/.claude
+      - ${HOME}/.claude.json:${HOME}/.claude.json
     restart: unless-stopped
 
   mysql:

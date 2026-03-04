@@ -296,17 +296,25 @@ zend.assertions = 1
 
 The PHP containers mount the host's Claude Code binary and state at runtime, so
 you can run `claude` inside a container without re-authenticating — and resume
-previous conversations with `/resume`.
+previous conversations with `/resume`. Plugins work too, since the container
+user's home directory matches the host `$HOME` (paths in plugin configs resolve
+correctly).
 
 **Prerequisites:** Claude Code must be installed on the host (`~/.local/bin/claude`).
 
-Two mounts are used:
+The following are mounted from the host:
 
 - `~/.local/bin/claude` — the CLI binary (read-only)
-- `~/.claude/` — credentials, config, and conversation history (read-write)
+- `~/.claude/` — credentials, config, plugins, and conversation history (read-write)
+- `~/.claude.json` — config file so Claude skips first-run setup
 
-The `~/.claude.json` config file is also mounted so Claude skips the first-run
-setup.
+The container user is created with the host's `$HOME` as its home directory
+(passed via the `HOST_HOME` build arg). This ensures absolute paths in Claude's
+config and plugin cache files resolve identically inside the container.
+
+MCP servers are supported out of the box — `nodejs` and `npm` (providing `npx`)
+are installed in the base image. If `NODE_VERSIONS` is also set, the nvm-managed
+version takes precedence.
 
 To use it, shell into a container and run `claude`:
 

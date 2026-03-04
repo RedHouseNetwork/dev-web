@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         iputils-ping \
         openssh-client \
         nano \
+        pwgen \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
         intl \
@@ -130,11 +131,12 @@ RUN curl -sS https://get.symfony.com/cli/installer | bash \
 
 # Create user/group for host UID so shell doesn't show "I have no name!"
 ARG HOST_UID=1000
+ARG HOST_HOME=/home/dev
 RUN if ! getent group ${HOST_UID} >/dev/null; then \
         groupadd -g ${HOST_UID} dev; \
     fi \
     && if ! getent passwd ${HOST_UID} >/dev/null; then \
-        useradd -u ${HOST_UID} -g ${HOST_UID} -m -s /bin/bash dev; \
+        useradd -u ${HOST_UID} -g ${HOST_UID} -m -d ${HOST_HOME} -s /bin/bash dev; \
     fi
 
 # Create writable .claude directory for Claude Code credential passthrough.
@@ -144,7 +146,12 @@ RUN HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) \
     && chown ${HOST_UID}:${HOST_UID} "$HOME_DIR/.claude" \
     && mkdir -p "$HOME_DIR/.config/composer" \
     && echo '{"config":{"github-protocols":["ssh"],"use-github-api":false}}' > "$HOME_DIR/.config/composer/config.json" \
-    && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.config"
+    && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.config" \
+    && mkdir -p "$HOME_DIR/.local/share/nano" "$HOME_DIR/.local/bin" \
+    && chown -R ${HOST_UID}:${HOST_UID} "$HOME_DIR/.local"
+
+# Add ~/.local/bin to PATH so mounted Claude Code binary is found.
+ENV PATH="${HOST_HOME}/.local/bin:${PATH}"
 
 ARG NODE_VERSIONS=""
 # Optional: install nvm and Node.js versions.
@@ -162,6 +169,9 @@ RUN if [ -n "${NODE_VERSIONS}" ]; then \
     done \
     && corepack enable \
     && corepack prepare yarn@stable --activate \
+    && for bin in "$NVM_DIR/versions/node/$(nvm version default)/bin/"*; do \
+        [ -x "$bin" ] && ln -sf "$bin" /usr/local/bin/; \
+    done \
     && chown -R ${HOST_UID}:${HOST_UID} "$NVM_DIR" \
     && echo 'export NVM_DIR="$HOME/.nvm"' >> "$HOME_DIR/.bashrc" \
     && echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> "$HOME_DIR/.bashrc"; \
@@ -177,7 +187,7 @@ ENV GBT_CARS='Hostname, Dir, Git, Sign' \
     GBT_CAR_HOSTNAME_BG=red \
     GBT_CAR_HOSTNAME_FG=white
 RUN echo "PS1='\$(gbt \$?)'" >> /etc/skel/.bashrc \
-    && { [ -d /home/dev ] && echo "PS1='\$(gbt \$?)'" >> /home/dev/.bashrc || true; }
+    && { HOME_DIR=$(getent passwd ${HOST_UID} | cut -d: -f6) && [ -d "$HOME_DIR" ] && echo "PS1='\$(gbt \$?)'" >> "$HOME_DIR/.bashrc" || true; }
 
 ARG WEB_ROOT=/home/wobble/web
 RUN mkdir -p "$WEB_ROOT"
