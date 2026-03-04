@@ -9,9 +9,10 @@ services:
       WEB_ROOT: ${WEB_ROOT}
       CADDY_SITES: ${CADDY_SITES:-php83,php84}
       SITE_TLD: ${SITE_TLD:-symf4}
+      CERT_EXTRA_SANS: ${CERT_EXTRA_SANS:-}
     volumes:
       - ./caddy-entrypoint.sh:/entrypoint.sh:ro
-      - ./certs:/etc/caddy/certs:ro
+      - ./certs:/etc/caddy/certs
       - ./overrides:/etc/caddy/overrides:ro
       - web:${WEB_ROOT}:ro
     entrypoint: /entrypoint.sh

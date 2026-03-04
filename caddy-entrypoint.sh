@@ -5,6 +5,56 @@ CADDY_SITES="${CADDY_SITES:-php83,php84}"
 SITE_TLD="${SITE_TLD:-symf4}"
 WEB_ROOT="${WEB_ROOT:?WEB_ROOT must be set}"
 
+# Ensure openssl is available (not included in caddy:2-alpine)
+if ! command -v openssl >/dev/null 2>&1; then
+    apk add --no-cache openssl >/dev/null 2>&1
+fi
+
+# --- TLS certificate generation ---
+CERT_DIR="/etc/caddy/certs"
+CERT_FILE="$CERT_DIR/server.crt"
+KEY_FILE="$CERT_DIR/server.key"
+HASH_FILE="$CERT_DIR/.san-hash"
+
+# Build SAN list from CADDY_SITES and CERT_EXTRA_SANS
+SAN_LIST="DNS:localhost"
+IFS=','
+for entry in $CADDY_SITES; do
+    entry=$(echo "$entry" | xargs)
+    [ -z "$entry" ] && continue
+    domain=$(echo "$entry" | cut -d: -f1)
+    SAN_LIST="$SAN_LIST,DNS:*.${domain}.${SITE_TLD}"
+done
+if [ -n "${CERT_EXTRA_SANS:-}" ]; then
+    for extra in $CERT_EXTRA_SANS; do
+        extra=$(echo "$extra" | xargs)
+        [ -z "$extra" ] && continue
+        SAN_LIST="$SAN_LIST,DNS:${extra}"
+    done
+fi
+unset IFS
+
+# Check if certs need (re)generation
+CURRENT_HASH=$(echo "$SAN_LIST" | sha256sum | cut -d' ' -f1)
+EXISTING_HASH=""
+[ -f "$HASH_FILE" ] && EXISTING_HASH=$(cat "$HASH_FILE")
+
+if [ ! -f "$CERT_FILE" ] || [ "$CURRENT_HASH" != "$EXISTING_HASH" ]; then
+    mkdir -p "$CERT_DIR"
+    openssl req -x509 -nodes -days 3650 \
+        -newkey rsa:2048 \
+        -keyout "$KEY_FILE" \
+        -out "$CERT_FILE" \
+        -subj "/CN=${SITE_TLD}-dev" \
+        -addext "subjectAltName=$SAN_LIST" \
+        2>/dev/null
+    echo "$CURRENT_HASH" > "$HASH_FILE"
+    echo "TLS certificate generated with SANs: $SAN_LIST"
+else
+    echo "TLS certificate up to date (SANs unchanged)"
+fi
+# --- End TLS certificate generation ---
+
 cat > /etc/caddy/Caddyfile <<STATIC
 {
 	auto_https off

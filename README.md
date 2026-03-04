@@ -5,19 +5,10 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 ## Prerequisites
 
 - Docker & Docker Compose
-- openssl (for certificate generation)
 
 ## First-time setup
 
-1. **Generate TLS certificates:**
-
-   ```
-   ./scripts/generate-certs.sh
-   ```
-
-   Trust the generated `certs/server.crt` in your browser/OS if you want to avoid TLS warnings.
-
-2. **Create your `.env` file:**
+1. **Create your `.env` file:**
 
    ```
    cp .env.example .env
@@ -25,7 +16,7 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 
    Edit `.env` and set `UID` to your host user ID (`id -u`), `WEB_ROOT` to your web projects directory, and set your database passwords.
 
-3. **Build and start:**
+2. **Build and start:**
 
    ```
    ./build.sh
@@ -100,6 +91,29 @@ The TLD defaults to `symf4` and can be changed with `SITE_TLD` in `.env`.
 Pointing these hostnames at your machine is your responsibility — configure your
 router, `/etc/hosts`, dnsmasq, or similar to resolve `*.symf4` to the host running
 this stack.
+
+## TLS certificates
+
+TLS certificates are auto-generated when Caddy starts. The certificate's Subject
+Alternative Names (SANs) are derived from your configuration:
+
+- **Base SANs** — `*.{domain}.{SITE_TLD}` for each `CADDY_SITES` entry, plus `localhost`
+- **Extra SANs** — additional entries from `CERT_EXTRA_SANS` (comma-separated DNS names)
+
+Use `CERT_EXTRA_SANS` for multi-level subdomain wildcards that the base SANs don't
+cover. For example, `*.php83.symf4` covers `myapp.php83.symf4` but not
+`admin.dft-rfs.php83.symf4` — that needs an explicit `*.dft-rfs.php83.symf4` entry:
+
+```
+CERT_EXTRA_SANS=*.dft-rfs.php83.symf4,*.dft-rfs.php84.symf4
+```
+
+Certificates only regenerate when the SAN list changes — restarting Caddy with an
+unchanged config reuses the existing cert. After the first generation (or any
+regeneration), trust `certs/server.crt` in your browser/OS to avoid TLS warnings.
+
+Manual generation without starting containers is still available via
+`scripts/generate-certs.sh`.
 
 ## SQLCipher (optional)
 
