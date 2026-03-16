@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         iproute2 \
         iputils-ping \
         openssh-client \
+        less \
         nano \
         pwgen \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \

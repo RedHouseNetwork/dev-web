@@ -1,5 +1,6 @@
-certs/
+.claude
 .env
+certs/
 data/
 overrides/
 cloud-sql.json

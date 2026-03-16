@@ -39,6 +39,8 @@ services:
     hostname: PHP83
     user: "${UID}:${UID}"
     shm_size: '2g'
+    ports:
+      - "8300-8309:8300-8309"
     tmpfs:
       - /tmp
     ulimits:
@@ -80,6 +82,8 @@ services:
     hostname: PHP84
     user: "${UID}:${UID}"
     shm_size: '2g'
+    ports:
+      - "8400-8409:8400-8409"
     tmpfs:
       - /tmp
     ulimits:

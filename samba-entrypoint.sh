@@ -6,8 +6,8 @@ SAMBA_USER="${SAMBA_USER:-$(basename "$SAMBA_ROOT")}"
 SAMBA_PASSWORD="${SAMBA_PASSWORD:?SAMBA_PASSWORD must be set}"
 HOST_UID="${HOST_UID:-1000}"
 
-# Create system user with matching UID
-adduser -D -u "$HOST_UID" "$SAMBA_USER"
+# Create system user with matching UID (ignore if already exists)
+adduser -D -u "$HOST_UID" "$SAMBA_USER" 2>/dev/null || true
 
 # Set Samba password
 printf '%s\n%s\n' "$SAMBA_PASSWORD" "$SAMBA_PASSWORD" | smbpasswd -a -s "$SAMBA_USER"
