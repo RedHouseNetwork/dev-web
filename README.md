@@ -30,8 +30,8 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 | Service | Image | Host port | Default |
 |---------|-------|-----------|---------|
 | caddy | caddy:2-alpine | 80, 443 | Yes |
-| php83 | php:8.3-fpm | - | Yes |
-| php84 | php:8.4-fpm | - | Yes |
+| php83 | php:8.3-fpm | 8300-8309* | Yes |
+| php84 | php:8.4-fpm | 8400-8409* | Yes |
 | mysql | mysql:8.0 | 3306 | Yes |
 | mysql84 | mysql:8.4 | 3384 | No |
 | mariadb | mariadb:11.1 | 3406 | No |
@@ -39,6 +39,11 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 | postgres | postgres | 5432 | No |
 | samba | alpine + samba | 445 | No |
 | cloud-sql-proxy | cloud-sql-proxy:2 | 3307 | No |
+
+*The port ranges on the PHP containers are not used by the stack itself — they are
+spare mappings available for any process you run inside the container that needs to
+be reachable from the host or network (e.g. `symfony server:start --port=8400`,
+Vite dev servers, or any other listener).
 
 ## Starting optional databases
 
@@ -149,6 +154,16 @@ PHP84_XDEBUG=1
 
 Then rebuild: `docker compose build php83 php84`.
 
+Xdebug is installed with `mode=off` by default (set in `config/php.ini`). To enable
+a mode, edit the ini or use a per-container override:
+
+```ini
+# config/php84-overrides.ini
+xdebug.mode = debug
+```
+
+Then restart: `docker compose restart php84`.
+
 ## Chrome / Panther (E2E testing)
 
 The PHP containers include Chrome and ChromeDriver by default for running
@@ -185,6 +200,53 @@ Then rebuild: `docker compose build php84`.
 yt-dlp is installed as an architecture-specific standalone binary (no Python
 required). The containers set `TMPDIR=/tmp` so the binary can decompress at
 runtime.
+
+## Android SDK (optional)
+
+The PHP containers can optionally include the Android SDK for building Android apps
+(e.g. Capacitor/Cordova hybrid apps) from the command line. To enable, set the build
+arg in your `.env`:
+
+```
+PHP84_ANDROID_SDK=1
+```
+
+Then rebuild: `docker compose build php84`.
+
+This installs:
+
+- OpenJDK 17 (required by Gradle/Kotlin)
+- Gradle 8.12
+- Android command-line tools (`sdkmanager`, `avdmanager`)
+- `platform-tools` (adb, fastboot)
+- `platforms;android-35`
+- `build-tools;35.0.0`
+- `libsqlite3-dev` (native SQLite library needed by Room's KSP annotation processor)
+
+`ANDROID_HOME` is set to `/opt/android-sdk` and the SDK tools are on the `PATH`.
+The SDK directory is owned by the container user, so you can install additional
+components at runtime:
+
+```
+sdkmanager "platforms;android-34" "ndk;27.0.12077973"
+```
+
+If your project doesn't have a Gradle wrapper yet, bootstrap one with:
+
+```
+cd android && gradle wrapper
+```
+
+After that, `./gradlew` is self-contained and will download the Gradle version
+specified in `gradle-wrapper.properties`.
+
+With Node.js also enabled (`PHP84_NODE_VERSIONS`), a typical Capacitor workflow
+inside the container looks like:
+
+```
+npx cap sync android
+cd android && ./gradlew assembleDebug
+```
 
 ## nvm / Node.js (optional)
 

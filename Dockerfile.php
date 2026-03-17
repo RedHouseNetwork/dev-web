@@ -116,6 +116,35 @@ RUN if [ -n "${INSTALL_FFMPEG}" ]; then \
     && rm -rf /var/lib/apt/lists/*; \
 fi
 
+ARG INSTALL_ANDROID_SDK=""
+ARG HOST_UID=1000
+# Optional: install Android SDK, Gradle, and JDK 17 for Android builds.
+# Enabled by setting PHP83_ANDROID_SDK=1 or PHP84_ANDROID_SDK=1 in .env.
+# Use `sdkmanager` inside the container to install additional platforms/components.
+RUN if [ -n "${INSTALL_ANDROID_SDK}" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends \
+        openjdk-17-jdk-headless \
+        libsqlite3-dev \
+    && mkdir -p /opt/android-sdk/cmdline-tools \
+    && curl -fsSL "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" -o /tmp/cmdline-tools.zip \
+    && unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools \
+    && mv /tmp/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest \
+    && rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools \
+    && (yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true) \
+    && /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" \
+    && GRADLE_VERSION=8.12 \
+    && curl -fsSL "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o /tmp/gradle.zip \
+    && unzip -q /tmp/gradle.zip -d /opt \
+    && ln -s /opt/gradle-${GRADLE_VERSION}/bin/gradle /usr/local/bin/gradle \
+    && rm /tmp/gradle.zip \
+    && mkdir -p /opt/android-sdk/tmp \
+    && chown -R ${HOST_UID}:${HOST_UID} /opt/android-sdk \
+    && rm -rf /var/lib/apt/lists/*; \
+fi
+ENV ANDROID_HOME=/opt/android-sdk
+ENV JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=/opt/android-sdk/tmp"
+ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+
 # Install gbt prompt (https://github.com/jtyr/gbt)
 ARG TARGETARCH
 RUN curl -fsSL "https://github.com/jtyr/gbt/releases/download/v2.0.0/gbt-2.0.0-linux-${TARGETARCH}.tar.gz" \
