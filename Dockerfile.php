@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libxml2-dev \
         libonig-dev \
         libgmp-dev \
+        imagemagick \
         unzip \
         git \
         curl \
@@ -20,6 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         less \
         nano \
         pwgen \
+        bc \
+        rsync \
+        parallel \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
         intl \

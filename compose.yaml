@@ -29,7 +29,7 @@ services:
       args:
         PHP_VERSION: "8.3"
         WEB_ROOT: ${WEB_ROOT}
-        HOST_UID: ${UID}
+        HOST_UID: ${HOST_UID}
         SQLCIPHER_VERSION: ${PHP83_SQLCIPHER_VERSION:-}
         CHROME_VERSION: ${PHP83_CHROME_VERSION:-128.0.6613.137}
         INSTALL_XDEBUG: ${PHP83_XDEBUG:-}
@@ -38,7 +38,7 @@ services:
         NODE_VERSIONS: ${PHP83_NODE_VERSIONS:-}
         HOST_HOME: ${HOME}
     hostname: PHP83
-    user: "${UID}:${UID}"
+    user: "${HOST_UID}:${HOST_UID}"
     shm_size: '2g'
     ports:
       - "8300-8309:8300-8309"
@@ -73,7 +73,7 @@ services:
       args:
         PHP_VERSION: "8.4"
         WEB_ROOT: ${WEB_ROOT}
-        HOST_UID: ${UID}
+        HOST_UID: ${HOST_UID}
         SQLCIPHER_VERSION: ${PHP84_SQLCIPHER_VERSION:-}
         CHROME_VERSION: ${PHP84_CHROME_VERSION:-128.0.6613.137}
         INSTALL_XDEBUG: ${PHP84_XDEBUG:-}
@@ -82,7 +82,7 @@ services:
         NODE_VERSIONS: ${PHP84_NODE_VERSIONS:-}
         HOST_HOME: ${HOME}
     hostname: PHP84
-    user: "${UID}:${UID}"
+    user: "${HOST_UID}:${HOST_UID}"
     shm_size: '2g'
     ports:
       - "8400-8409:8400-8409"
@@ -192,7 +192,7 @@ services:
       SAMBA_ROOT: ${SAMBA_ROOT:-}
       SAMBA_USER: ${SAMBA_USER:-}
       SAMBA_PASSWORD: ${SAMBA_PASSWORD:-}
-      HOST_UID: ${UID}
+      HOST_UID: ${HOST_UID}
     ports:
       - "445:445"
     volumes:
