@@ -174,6 +174,9 @@ services:
       - ./data/mysql84:/var/lib/mysql
       - ./data/dumps:/dumps
       - web:/web
+    networks:
+      default:
+        ipv4_address: 172.19.0.9
 
   mariadb:
     container_name: mariadb
@@ -188,6 +191,9 @@ services:
       - ./data/mariadb:/var/lib/mysql
       - ./data/dumps:/dumps
       - web:/web
+    networks:
+      default:
+        ipv4_address: 172.19.0.10
 
   # N.B. mkdir data/mssql && sudo chown 10001:0 data/mssql
   mssql:
@@ -203,6 +209,9 @@ services:
       - "1433:1433"
     volumes:
       - ./data/mssql:/var/opt/mssql
+    networks:
+      default:
+        ipv4_address: 172.19.0.11
 
   postgres:
     container_name: postgres
@@ -236,6 +245,9 @@ services:
     volumes:
       - ${SAMBA_ROOT:-.}:/share
       - ./config/smb.conf:/etc/samba/smb.conf:ro
+    networks:
+      default:
+        ipv4_address: 172.19.0.12
 
   cloud-sql-proxy:
     container_name: cloud-sql-proxy
