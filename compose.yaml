@@ -1,4 +1,20 @@
 services:
+  dnsmasq:
+    container_name: dnsmasq
+    image: alpine:3.21
+    entrypoint: /entrypoint.sh
+    environment:
+      CADDY_SITES: ${CADDY_SITES:-php83,php84}
+      SITE_TLD: ${SITE_TLD:-symf4}
+      CERT_EXTRA_SANS: ${CERT_EXTRA_SANS:-}
+      CADDY_IP: 172.19.0.3
+    volumes:
+      - ./dnsmasq-entrypoint.sh:/entrypoint.sh:ro
+    networks:
+      default:
+        ipv4_address: 172.19.0.2
+    restart: unless-stopped
+
   caddy:
     container_name: caddy
     image: caddy:2-alpine
@@ -19,6 +35,9 @@ services:
     depends_on:
       - php83
       - php84
+    networks:
+      default:
+        ipv4_address: 172.19.0.3
     restart: unless-stopped
 
   php83:
@@ -63,6 +82,10 @@ services:
       - ${HOME}/.local/bin/claude:${HOME}/.local/bin/claude:ro
       - ${HOME}/.claude:${HOME}/.claude
       - ${HOME}/.claude.json:${HOME}/.claude.json
+    dns:
+      - 172.19.0.2
+    depends_on:
+      - dnsmasq
     restart: unless-stopped
 
   php84:
@@ -107,6 +130,10 @@ services:
       - ${HOME}/.local/bin/claude:${HOME}/.local/bin/claude:ro
       - ${HOME}/.claude:${HOME}/.claude
       - ${HOME}/.claude.json:${HOME}/.claude.json
+    dns:
+      - 172.19.0.2
+    depends_on:
+      - dnsmasq
     restart: unless-stopped
 
   mysql:
@@ -170,7 +197,7 @@ services:
 
   postgres:
     container_name: postgres
-    image: postgres
+    image: postgis/postgis
     profiles: [postgres]
     restart: unless-stopped
     environment:
@@ -178,7 +205,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql
       - web:/web
 
   samba:
@@ -221,3 +248,9 @@ volumes:
       type: none
       o: bind
       device: ${WEB_ROOT}
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24

@@ -14,7 +14,7 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
    cp .env.example .env
    ```
 
-   Edit `.env` and set `UID` to your host user ID (`id -u`), `WEB_ROOT` to your web projects directory, and set your database passwords.
+   Edit `.env` and set `HOST_UID` to your host user ID (`id -u`), `WEB_ROOT` to your web projects directory, and set your database passwords.
 
 2. **Build and start:**
 
@@ -29,6 +29,7 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 
 | Service | Image | Host port | Default |
 |---------|-------|-----------|---------|
+| dnsmasq | alpine:3.21 | — | Yes |
 | caddy | caddy:2-alpine | 80, 443 | Yes |
 | php83 | php:8.3-fpm | 8300-8309* | Yes |
 | php84 | php:8.4-fpm | 8400-8409* | Yes |
@@ -36,7 +37,7 @@ Local development stack: Caddy reverse proxy, PHP-FPM (8.3 + 8.4), and databases
 | mysql84 | mysql:8.4 | 3384 | No |
 | mariadb | mariadb:11.1 | 3406 | No |
 | mssql | mssql/server:2022 | 1433 | No |
-| postgres | postgres | 5432 | No |
+| postgres | postgis/postgis | 5432 | No |
 | samba | alpine + samba | 445 | No |
 | cloud-sql-proxy | cloud-sql-proxy:2 | 3307 | No |
 
@@ -95,7 +96,9 @@ The TLD defaults to `symf4` and can be changed with `SITE_TLD` in `.env`.
 
 Pointing these hostnames at your machine is your responsibility — configure your
 router, `/etc/hosts`, dnsmasq, or similar to resolve `*.symf4` to the host running
-this stack.
+this stack. Inside the PHP containers, a built-in dnsmasq service automatically
+resolves these domains to the Caddy container (see
+[Inter-container DNS](#inter-container-dns) below).
 
 ## TLS certificates
 
@@ -119,6 +122,28 @@ regeneration), trust `certs/server.crt` in your browser/OS to avoid TLS warnings
 
 Manual generation without starting containers is still available via
 `scripts/generate-certs.sh`.
+
+## Inter-container DNS
+
+On the host, wildcard domains like `*.home.laptop` typically resolve to `127.0.0.1`.
+Inside a Docker container, `127.0.0.1` is the container itself — not the host — so
+PHP code making HTTP requests to these domains would fail to reach Caddy.
+
+A lightweight dnsmasq container solves this automatically. It intercepts DNS queries
+for domains derived from `CADDY_SITES` and `CERT_EXTRA_SANS`, returning the Caddy
+container's IP instead. All other queries (container names like `mysql`, internet
+domains) are forwarded through Docker's internal DNS as normal.
+
+No configuration is needed — the domains are derived from the same `CADDY_SITES` and
+`SITE_TLD` variables that drive Caddy's routing.
+
+To verify it's working:
+
+```
+docker exec php84 nslookup myapp.home.laptop
+```
+
+This should return `172.19.0.3` (Caddy's fixed IP on the internal network).
 
 ## SQLCipher (optional)
 
@@ -442,6 +467,7 @@ build.sh            # Rebuild and restart everything
 bin/                # Shell shortcuts for each container
 compose.yaml        # Service definitions
 caddy-entrypoint.sh # Generates Caddyfile from CADDY_SITES env and starts Caddy
+dnsmasq-entrypoint.sh # Generates dnsmasq config from CADDY_SITES and starts dnsmasq
 Dockerfile.php      # PHP-FPM image build
 Dockerfile.cloud-sql-proxy  # Cloud SQL Auth Proxy image
 Dockerfile.samba    # Samba file sharing image
