@@ -86,6 +86,9 @@ services:
       - 172.19.0.2
     depends_on:
       - dnsmasq
+    networks:
+      default:
+        ipv4_address: 172.19.0.4
     restart: unless-stopped
 
   php84:
@@ -134,6 +137,9 @@ services:
       - 172.19.0.2
     depends_on:
       - dnsmasq
+    networks:
+      default:
+        ipv4_address: 172.19.0.5
     restart: unless-stopped
 
   mysql:
@@ -151,6 +157,9 @@ services:
       - ./config/my.cnf:/etc/my.cnf:ro
       - ./data/dumps:/dumps
       - web:/web
+    networks:
+      default:
+        ipv4_address: 172.19.0.6
 
   mysql84:
     container_name: mysql84
@@ -206,6 +215,9 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql
       - web:/web
+    networks:
+      default:
+        ipv4_address: 172.19.0.7
 
   samba:
     container_name: samba
@@ -238,6 +250,9 @@ services:
       - web:${WEB_ROOT}:ro
       - ./cloud-sql.json:/etc/cloud-sql/config.json:ro
       - ./data/gcloud:/adc:ro
+    networks:
+      default:
+        ipv4_address: 172.19.0.8
     restart: unless-stopped
 
 volumes:
