@@ -10,7 +10,7 @@ apk add --no-cache dnsmasq >/dev/null 2>&1
 cat > /etc/dnsmasq.conf <<EOF
 no-resolv
 no-hosts
-listen-address=0.0.0.0
+listen-address=172.19.0.2
 server=127.0.0.11
 EOF
 

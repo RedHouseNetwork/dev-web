@@ -69,6 +69,30 @@ All databases use `root` as the username (except MSSQL which uses `sa`).
 
 From the host, connect via the mapped ports listed above.
 
+## Shared database network
+
+All database services (mysql, mysql84, mariadb, mssql, postgres) are attached to a
+`shared_db_network` in addition to the default internal network. This allows other
+Docker Compose projects on the same host to reach the databases by container name.
+
+To connect from another project's `compose.yaml`, add the network as external:
+
+```yaml
+services:
+  myapp:
+    networks:
+      - default
+      - shared_db_network
+
+networks:
+  shared_db_network:
+    external: true
+```
+
+Your app can then connect to e.g. `mysql:3306` or `postgres:5432` by service name.
+The network is created automatically when this dev stack starts — no manual
+`docker network create` is needed.
+
 ## Web projects
 
 Sites are served from the `web` volume (bound to `~/web`). Caddy routing is
@@ -290,6 +314,36 @@ The first version listed becomes the nvm default. Inside the container:
 node --version   # default version
 nvm use 18       # switch versions
 nvm ls           # list installed versions
+```
+
+## Playwright (optional)
+
+The PHP containers can optionally include [Playwright](https://playwright.dev/)
+browsers (Chromium, Firefox, WebKit) for cross-browser E2E testing. This requires
+Node.js to be installed (`NODE_VERSIONS` must be set).
+
+To enable, set the build arg in your `.env`:
+
+```
+PHP84_NODE_VERSIONS=22
+PHP84_PLAYWRIGHT=1
+```
+
+Then rebuild: `docker compose build php84`.
+
+Browsers are installed to `/opt/playwright-browsers` and the `PLAYWRIGHT_BROWSERS_PATH`
+environment variable is set globally, so any project can use Playwright without a
+local `node_modules` install — just run `npx playwright test` from your project
+directory.
+
+A system Chrome is also installed (`/opt/google/chrome/chrome`) so that Claude Code's
+Playwright MCP plugin works out of the box inside the container.
+
+Verify it works:
+
+```
+docker compose exec php84 npx playwright --version
+docker compose exec php84 ls /opt/playwright-browsers/
 ```
 
 ## Samba file sharing (optional)

@@ -211,6 +211,26 @@ RUN if [ -n "${NODE_VERSIONS}" ]; then \
     && echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> "$HOME_DIR/.bashrc"; \
 fi
 
+RUN chmod 1777 /tmp
+
+ARG INSTALL_PLAYWRIGHT=""
+# Optional: install Playwright browsers and their system dependencies.
+# Requires NODE_VERSIONS to be set (Node.js must be installed via nvm first).
+# Enabled by setting PHP83_PLAYWRIGHT=1 or PHP84_PLAYWRIGHT=1 in .env.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN if [ -n "${INSTALL_PLAYWRIGHT}" ]; then \
+    if ! command -v node >/dev/null 2>&1; then \
+        echo "ERROR: INSTALL_PLAYWRIGHT requires NODE_VERSIONS to be set." >&2; \
+        exit 1; \
+    fi \
+    && npx playwright install-deps \
+    && mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} \
+    && npx playwright install \
+    && npx playwright install chrome \
+    && chown -R ${HOST_UID}:${HOST_UID} ${PLAYWRIGHT_BROWSERS_PATH} \
+    && rm -rf /var/lib/apt/lists/*; \
+fi
+
 # Rewrite HTTPS GitHub URLs to SSH so Composer uses the mounted SSH keys
 # for private repositories instead of requiring a personal access token.
 RUN git config --system url."git@github.com:".insteadOf "https://github.com/"
@@ -225,7 +245,5 @@ RUN echo "PS1='\$(gbt \$?)'" >> /etc/skel/.bashrc \
 
 ARG WEB_ROOT=/home/wobble/web
 RUN mkdir -p "$WEB_ROOT"
-
-RUN chmod 1777 /tmp
 
 WORKDIR $WEB_ROOT

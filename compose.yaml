@@ -55,9 +55,12 @@ services:
         INSTALL_FFMPEG: ${PHP83_FFMPEG:-}
         INSTALL_ANDROID_SDK: ${PHP83_ANDROID_SDK:-}
         NODE_VERSIONS: ${PHP83_NODE_VERSIONS:-}
+        INSTALL_PLAYWRIGHT: ${PHP83_PLAYWRIGHT:-}
         HOST_HOME: ${HOME}
     hostname: PHP83
     user: "${HOST_UID}:${HOST_UID}"
+    entrypoint: /php-entrypoint.sh
+    command: ["php-fpm"]
     shm_size: '2g'
     ports:
       - "8300-8309:8300-8309"
@@ -72,8 +75,12 @@ services:
       HOME: ${HOME}
       CLAUDE_AUTO_UPDATE: 0
       TMPDIR: /tmp
+      SSL_CERT_FILE: /tmp/ca-bundle.crt
     volumes:
       - web:${WEB_ROOT}
+      - ./php-entrypoint.sh:/php-entrypoint.sh:ro
+      - ./certs/server.crt:/usr/local/share/ca-certificates/dev-caddy.crt:ro
+      - ./config/php-ca-bundle.ini:/usr/local/etc/php/conf.d/99-ca-bundle.ini:ro
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
       - ./config/php83-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
@@ -106,9 +113,12 @@ services:
         INSTALL_FFMPEG: ${PHP84_FFMPEG:-}
         INSTALL_ANDROID_SDK: ${PHP84_ANDROID_SDK:-}
         NODE_VERSIONS: ${PHP84_NODE_VERSIONS:-}
+        INSTALL_PLAYWRIGHT: ${PHP84_PLAYWRIGHT:-}
         HOST_HOME: ${HOME}
     hostname: PHP84
     user: "${HOST_UID}:${HOST_UID}"
+    entrypoint: /php-entrypoint.sh
+    command: ["php-fpm"]
     shm_size: '2g'
     ports:
       - "8400-8409:8400-8409"
@@ -123,8 +133,12 @@ services:
       HOME: ${HOME}
       CLAUDE_AUTO_UPDATE: 0
       TMPDIR: /tmp
+      SSL_CERT_FILE: /tmp/ca-bundle.crt
     volumes:
       - web:${WEB_ROOT}
+      - ./php-entrypoint.sh:/php-entrypoint.sh:ro
+      - ./certs/server.crt:/usr/local/share/ca-certificates/dev-caddy.crt:ro
+      - ./config/php-ca-bundle.ini:/usr/local/etc/php/conf.d/99-ca-bundle.ini:ro
       - ./config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
       - ./config/php84-overrides.ini:/usr/local/etc/php/conf.d/zzzz-overrides.ini:ro
       - ./config/php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro
@@ -160,6 +174,7 @@ services:
     networks:
       default:
         ipv4_address: 172.19.0.6
+      shared_db_network:
 
   mysql84:
     container_name: mysql84
@@ -177,6 +192,7 @@ services:
     networks:
       default:
         ipv4_address: 172.19.0.9
+      shared_db_network:
 
   mariadb:
     container_name: mariadb
@@ -194,6 +210,7 @@ services:
     networks:
       default:
         ipv4_address: 172.19.0.10
+      shared_db_network:
 
   # N.B. mkdir data/mssql && sudo chown 10001:0 data/mssql
   mssql:
@@ -212,10 +229,12 @@ services:
     networks:
       default:
         ipv4_address: 172.19.0.11
+      shared_db_network:
 
   postgres:
     container_name: postgres
     image: postgis/postgis
+    profiles: [postgres]
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -227,6 +246,7 @@ services:
     networks:
       default:
         ipv4_address: 172.19.0.7
+      shared_db_network:
 
   samba:
     container_name: samba
@@ -280,3 +300,5 @@ networks:
     ipam:
       config:
         - subnet: 172.19.0.0/24
+  shared_db_network:
+    name: shared_db_network
